@@ -2,7 +2,8 @@
 
 struct Agenda{
     char nome[30];
-    int idade;
+    int idade;  
+    Agenda *next;
 }
 typedef struct Agenda Agenda;
 
