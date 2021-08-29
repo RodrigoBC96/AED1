@@ -1,6 +1,6 @@
 # Atividade 1
 
-Nome: Rodrigo Barbosa Carvalho
+Nome: Rodrigo Barbosa Carvalho\n
 Matrícula: 16104702
 GitHub: https://github.com/RodrigoBC96/
 Link dos vídeos:
