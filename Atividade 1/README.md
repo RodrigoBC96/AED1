@@ -2,7 +2,7 @@
 
 -  Nome: Rodrigo Barbosa Carvalho
 -  Matrícula: 16104702
--  GitHub: https://github.com/RodrigoBC96/
+-  GitHub: https://github.com/RodrigoBC96/AED1
 -  Link dos vídeos:
   
  -- Exercícios --
