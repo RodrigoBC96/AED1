@@ -27,3 +27,7 @@
  -- Execução --
  
   Devido à lógica utilizada, existem excessões de caso no exercício 2, visto que nomes que podem estar contidos dentro de outros e nomes compostos não foram cogitados para esta aplicação. Nos demais, apenas é pedido que os parâmetros do enunciado sejam seguidos.
+
+ -- Comentário --
+ 
+  Ao tentar processar os códigos com o Dr. Memory, foram encontrados diversos problemas durante os testes, porém, nenhum deles se mostrou relacionado com o código à princípio. Pois se tratavam de quebras internas ou acesso fora da área do heap.
