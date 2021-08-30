@@ -23,3 +23,7 @@
 - Não pergunte para o usuário quantas pessoas ele vai incluir. Não pode alocar espaço para mais pessoas do que o necessário.
 - Cada pessoa tem nome[10], idade e telefone.
 - O trabalho que vale nota será uma continuação deste.
+
+ -- Execução --
+ 
+  Devido à lógica utilizada, existem excessões de caso no exercício 2, visto que nomes que podem estar contidos dentro de outros e nomes compostos não foram cogitados para esta aplicação. Nos demais, apenas é pedido que os parâmetros do enunciado sejam seguidos.
