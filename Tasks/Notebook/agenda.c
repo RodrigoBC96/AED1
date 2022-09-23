@@ -4,7 +4,6 @@ porém, toda a informação incluída na agenda deve ficar num único lugar cham
 - Não pergunte para o usuário quantas pessoas ele vai incluir.
 Não pode alocar espaço para mais pessoas do que o necessário.
 - Cada pessoa tem nome[10], idade e telefone.
-
 - Nenhuma variável pode ser declarada em todo o programa, somente ponteiros.
   Todos os dados do programa devem ser guardados dentro do pBuffer.
 * Nem mesmo como parâmetro de função. Só ponteiros que apontam para dentro do pBuffer.
@@ -18,7 +17,9 @@ Não pode alocar espaço para mais pessoas do que o necessário.
 #include <stdio.h> 
 #include <stdlib.h>
 #define Person sizeof(char)*10+sizeof(int)*2 
-#define Setup sizeof(int)*3 + sizeof(char)*10
+#define Sentinel sizeof(void*)*2
+#define Node Person+sizeof(void*)*2
+#define Setup sizeof(int)*3+sizeof(char)*10+Sentinel
 
 /*
 for(*pCount = 0; *pCount < 3; *pCount = *pCount + 1)
@@ -30,8 +31,8 @@ for(*pCount = 0; *pCount < 3; *pCount = *pCount + 1)
 - Modificar as funções para usar pop, push, etc.
 */
 
-void include(void* pBuffer, int* pSize){ //Incluir
-    void *pAux = pBuffer + Setup + Person*(*pSize);
+void include(void* pSent, void* pHeap){ //Incluir
+    void *pAux = pHeap;
 
     printf("Insira o nome: ");
     scanf("%s", (char*) pAux);
@@ -41,6 +42,10 @@ void include(void* pBuffer, int* pSize){ //Incluir
     pAux = pAux + sizeof(int);
     printf("Insira o telefone: ");
     scanf("%d", (int *) pAux);
+
+    if(pSent){
+        return;
+    }
 }
 
 int delete(void* pBuffer, int* pSize, int* pCount, char* pName){ //Apagar
@@ -101,20 +106,25 @@ void list(void* pBuffer, int* pSize, int* pCount){ //Listar
     void *pAux = pBuffer + Setup;
 
     for(*pCount = 0; *pCount < *pSize; *pCount = *pCount + 1){
-        printf("Pessoa %d\nNome: %s", *pCount+1,(char) pAux);
+        printf("Pessoa %d\nNome: %s", *pCount+1,(char *) pAux);
         pAux = pAux + sizeof(char)*10;
-        printf("nIdade: %d\n", (int) pAux);
+        printf("nIdade: %d\n", (int *) pAux);
         pAux = pAux + sizeof(int);
-        printf("Telefone: %d\n\n", (int)pAux);
+        printf("Telefone: %d\n\n", (int *)pAux);
         pAux = pAux + sizeof(int);
     }
+}
+
+void RESET(void* pSent){
+    *(void **)pSent = NULL;
+    *(void **)(pSent + sizeof(void*)) = NULL;
 }
 
 //void freeBuffer(void* pBuffer){}
 
 int main(){
 
-    void *pBuffer = NULL;
+    void *pBuffer = NULL, *pSent = NULL, *pAux = NULL;
     int *pOp = NULL, *pSize = NULL, *pCount = NULL;
     char *pName = NULL;
 
@@ -123,10 +133,12 @@ int main(){
         printf("Erro, nao ha memoria livre! Encerrando...");
         exit(1);
     }
-    pOp = pBuffer;
-    pSize = pBuffer + sizeof(int);
-    pCount = pBuffer + sizeof(int)*2;
-    pName = pBuffer + sizeof(int)*3;
+    pOp = (int *) pBuffer;
+    pSize = (int *) pBuffer + sizeof(int);
+    pCount = (int *) pBuffer + sizeof(int)*2;
+    pName = (char *) pBuffer + sizeof(int)*3;
+    pSent = pBuffer + Setup - Sentinel;
+    RESET(pSent);
     *pSize = 0;
 
     while(*pOp != 5){
@@ -140,12 +152,12 @@ int main(){
         scanf("%d",pOp);
         switch(*pOp){
             case 1://Incluir
-                pBuffer = realloc(pBuffer,(sizeof(int)*3) + Person*(*pSize + 1));
-                if(pBuffer == NULL){
+                pAux = (void *)malloc(Node);
+                if(!pAux){
                     printf("Erro, nao ha memoria livre! Encerrando...");
                     exit(1);
                 }
-                include(pBuffer, pSize);
+                include(pSent, pAux);
                 *pSize = *pSize + 1;
                 break;
             case 2://Apagar
@@ -185,6 +197,10 @@ int main(){
                 printf("Operacao invalida, insira novamente.\n");
                 break;
         }
+        pOp = (int *) pBuffer;
+        pSize = (int *) pBuffer + sizeof(int);
+        pCount = (int *) pBuffer + sizeof(int)*2;
+        pName = (char *) pBuffer + sizeof(int)*3;
     }
 
     //freeBuffer(pBuffer);
