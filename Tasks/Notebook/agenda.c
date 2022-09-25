@@ -16,36 +16,112 @@ Não pode alocar espaço para mais pessoas do que o necessário.
 
 #include <stdio.h> 
 #include <stdlib.h>
-#define Person sizeof(char)*10+sizeof(int)*2 
-#define Sentinel sizeof(void*)*2
-#define Node Person+sizeof(void*)*2
-#define Setup sizeof(int)*3+sizeof(char)*10+Sentinel
+#include <string.h>
+
+#define Person (sizeof(char)*10+sizeof(int)*2)
+#define Sentinel (sizeof(void**)*2)
+#define Node (Person+sizeof(void**)*2)
+#define Setup (sizeof(int)*3+sizeof(char)*10+Sentinel)
 
 /*
-for(*pCount = 0; *pCount < 3; *pCount = *pCount + 1)
-    printf("%d\n",*pCount);
+A construção dos contatos segue a organização das seguintes structs:
+typedef struct{
+    char name[10];
+    int age;
+    int phoneNumber;
+}Person;
+
+typedef struct{
+    Person p;
+    Person *pNext;
+    Person *pLast;
+}Node;
+
+typedef struct{
+    Node *pHead;
+    Node *pBottom;
+}Sentinel;
 */
 
-/* 
-- Inserir a estrutura do heap com nodos de lista duplamente encadeada
-- Modificar as funções para usar pop, push, etc.
-*/
+//Done
+void RESET(void* pSent){
+    *(void **)pSent = NULL;
+    *(void **)(pSent + sizeof(void*)) = NULL;
+}
+//Done
+void* PUSH(void* pSent, void* pNew, int *pSize, int *pCount){
+    void *pAux1 = *(void **)pSent, *pAux2 = NULL;
 
-void include(void* pSent, void* pHeap){ //Incluir
-    void *pAux = pHeap;
+    if(*(int *)pSize == 0){
+        *(void **)pSent = pNew;
+        *(void **)(pSent + sizeof(void**)) = pNew;
+        *(int *)pSize = *(int *)pSize + 1;
+        return pNew;
+    }
+    else{
+        *(int *)pCount = 0;
+        while(*(int *)pCount < *(int *)pSize){
+            if(strcmp((char *)pAux1, (char *)pNew) > 0){
+                if(*(int *)pCount == 0){
+                    *(void **)(pNew + Person) = pAux1;
+                    *(void **)(pNew + Person + sizeof(void**)) = NULL;
+                    *(void **)(pAux1 + Person + sizeof(void**)) = pNew;
+                    *(void **)pSent = pNew;
+                    *(int *)pSize = *(int *)pSize + 1;
+                    return pNew;
+                }
+                else{
+                    pAux2 = *(void **)(pAux1 + Person + sizeof(void**));
+                    *(void **)(pNew + Person) = pAux1;
+                    *(void **)(pNew + Person + sizeof(void**)) = pAux2;
+                    *(void **)(pAux2 + Person) = pNew;
+                    *(void **)(pAux1 + Person + sizeof(void**)) = pNew;
+                    *(int *)pSize = *(int *)pSize + 1;
+                    return pNew;
+                }
+            }
+            pAux1 = *(void **)(pAux1 + Person);
+            *(int *)pCount = *(int *)pCount + 1;
+        }
+        pAux1 = *(void **)(pSent + sizeof(void**));
+        *(void **)(pNew + Person) = NULL;
+        *(void **)(pNew + Person + sizeof(void**)) = pAux1;
+        *(void **)(pAux1 + Person) = pNew;
+        *(void **)(pSent + sizeof(void**)) = pNew;
+        *(int *)pSize = *(int *)pSize + 1;
+        return pNew;
+    }
+}
+//Done
+void* POP(void* pSent, int *pSize){
+    void *pFirst = *(void **)pSent;
+
+    *(void **)pSent = *(void **)(pFirst + Person);
+    *(void **)(pSent + Person + sizeof(void **)) == NULL;
+    *(int *)pSize = *(int *)pSize - 1;
+
+    return pFirst;
+}
+//Done
+void include(void* pSent, int *pSize, int *pCount){ //Incluir
+    void *pNew;
+
+    pNew = (void *)malloc(Node);
+    if(!pNew){
+        printf("Erro, nao ha memoria livre! Encerrando...");
+        exit(1);
+    }
 
     printf("Insira o nome: ");
-    scanf("%s", (char*) pAux);
-    pAux = pAux + sizeof(char)*10;
+    scanf("%s", (char*)pNew);
     printf("Insira a idade: ");
-    scanf("%d", (int*) pAux);
-    pAux = pAux + sizeof(int);
+    scanf("%d", (int*)(pNew + sizeof(char)*10));
     printf("Insira o telefone: ");
-    scanf("%d", (int *) pAux);
+    scanf("%d", (int *)(pNew + sizeof(char)*10 + sizeof(int)));
+    *(void **)(pNew + Person) = NULL;
+    *(void **)(pNew + Person + sizeof(void**)) = NULL;
 
-    if(pSent){
-        return;
-    }
+    pNew = PUSH(pSent, pNew, pSize, pCount);
 }
 
 int delete(void* pBuffer, int* pSize, int* pCount, char* pName){ //Apagar
@@ -91,9 +167,9 @@ int search(void* pBuffer, int* pSize, int* pCount, char* pName){ //Buscar
             pAux = pPair;
             printf("Nome: %s", (char *) pAux);
             pAux = pAux + sizeof(char)*10;
-            printf("\nIdade: %d\n", (int *) pAux);
+            printf("\nIdade: %d\n", *(int *) pAux);
             pAux = pAux + sizeof(int);
-            printf("Telefone: %d\n\n", (int *)pAux);
+            printf("Telefone: %d\n\n", *(int *)pAux);
             return 1;
         }
         pPair = pPair + Person;
@@ -101,26 +177,38 @@ int search(void* pBuffer, int* pSize, int* pCount, char* pName){ //Buscar
     }
     return 0;
 }
+//Done
+void list(void* pSent, int* pSize, int* pCount){ //Listar
+    void *pAux = NULL, *pListAux = NULL;
 
-void list(void* pBuffer, int* pSize, int* pCount){ //Listar
-    void *pAux = pBuffer + Setup;
+    pListAux = malloc(sizeof(void**)*(*(int *)pSize));
+    if(!pListAux){
+        printf("Erro, nao ha memoria livre! Encerrando...");
+        exit(1);
+    }
+    for(*(int *)pCount = 0; *(int *)pCount < *(int *)pSize; *(int *)pCount = *(int *)pCount + 1){
+        pAux = POP(pSent, pSize);
+        *(int *)pSize = *(int *)pSize + 1;
+        printf("Pessoa %d\nNome: %s\n", *pCount+1,(char *)pAux);
+        printf("Idade: %d\n", *(int *)(pAux + sizeof(char)*10));
+        printf("Telefone: %d\n\n", *(int *)(pAux+ sizeof(char)*10 + sizeof(int)));
+        *(void**)(pListAux+(sizeof(void**)*(*(int *)pCount))) = pAux;
+    }
+    for(*(int *)pCount = 0; *(int *)pCount < *(int *)pSize; *(int *)pCount = *(int *)pCount + 1){
+        pAux = PUSH(pSent, (void**)(pListAux+(sizeof(void**)*(*(int *)pCount))), pSize, pCount);
+        *(int *)pSize = *(int *)pSize - 1;
+    }
+    free(pListAux);
+}
 
-    for(*pCount = 0; *pCount < *pSize; *pCount = *pCount + 1){
-        printf("Pessoa %d\nNome: %s", *pCount+1,(char *) pAux);
-        pAux = pAux + sizeof(char)*10;
-        printf("nIdade: %d\n", (int *) pAux);
-        pAux = pAux + sizeof(int);
-        printf("Telefone: %d\n\n", (int *)pAux);
-        pAux = pAux + sizeof(int);
+void freeBuffer(void* pSent, int* pSize){
+    void *pAux = NULL;
+    
+    while(*(int *)pSize != 0){
+        pAux = POP(pSent, pSize);
+        free(pAux);
     }
 }
-
-void RESET(void* pSent){
-    *(void **)pSent = NULL;
-    *(void **)(pSent + sizeof(void*)) = NULL;
-}
-
-//void freeBuffer(void* pBuffer){}
 
 int main(){
 
@@ -133,16 +221,16 @@ int main(){
         printf("Erro, nao ha memoria livre! Encerrando...");
         exit(1);
     }
-    pOp = (int *) pBuffer;
-    pSize = (int *) pBuffer + sizeof(int);
-    pCount = (int *) pBuffer + sizeof(int)*2;
-    pName = (char *) pBuffer + sizeof(int)*3;
-    pSent = pBuffer + Setup - Sentinel;
+    pOp = pBuffer;
+    pSize = (pBuffer + sizeof(int));
+    pCount = (pBuffer + sizeof(int)*2);
+    pName = (pBuffer + sizeof(int)*3);
+    pSent = (pBuffer + Setup - Sentinel);
     RESET(pSent);
-    *pSize = 0;
+    *(int *)pSize = 0;
 
     while(*pOp != 5){
-        printf("Escolha uma operacao:\n");
+        printf("\nEscolha uma operacao:\n");
         printf("1. Incluir uma pessoa na agenda;\n");
         printf("2. Apagar uma pessoa da agenda;\n");
         printf("3. Buscar uma pessoa na agenda;\n");
@@ -152,13 +240,7 @@ int main(){
         scanf("%d",pOp);
         switch(*pOp){
             case 1://Incluir
-                pAux = (void *)malloc(Node);
-                if(!pAux){
-                    printf("Erro, nao ha memoria livre! Encerrando...");
-                    exit(1);
-                }
-                include(pSent, pAux);
-                *pSize = *pSize + 1;
+                include(pSent, pSize, pCount);
                 break;
             case 2://Apagar
                 if(*pSize == 0)
@@ -170,7 +252,6 @@ int main(){
                             printf("Erro, nao ha memoria livre! Encerrando...");
                             exit(1);
                         }
-                        *pSize = *pSize - 1;
                     }
                     else
                         printf("Pessoa não encontrada.\n");
@@ -188,22 +269,19 @@ int main(){
                 if(*pSize == 0)
                     printf("Lista vazia, insira uma pessoa.\n");
                 else
-                    list(pBuffer, pSize, pCount);
+                    list(pSent, pSize, pCount);
                 break;
             case 5://Sair
                 printf("Encerrando o programa...\n");
+                if(*(int *)pSize != 0)
+                    freeBuffer(pSent, pSize);
                 break;
             default://Exceção
                 printf("Operacao invalida, insira novamente.\n");
                 break;
         }
-        pOp = (int *) pBuffer;
-        pSize = (int *) pBuffer + sizeof(int);
-        pCount = (int *) pBuffer + sizeof(int)*2;
-        pName = (char *) pBuffer + sizeof(int)*3;
     }
 
-    //freeBuffer(pBuffer);
     free(pBuffer);
     return 0;
 }
