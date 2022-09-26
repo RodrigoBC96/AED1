@@ -195,7 +195,7 @@ int main(){
                 if(*pSize == 0)
                     printf("Lista vazia, insira uma pessoa.\n");
                 else{
-                    if(search(pBuffer, pSize, pCount, pName) == 0)
+                    if(search(pSent, pSize, pCount, pName) == 0)
                         printf("Pessoa não encontrada.\n");
                 }
                 break;
