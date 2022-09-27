@@ -12,6 +12,18 @@ O usuário digita uma letra e tecla enter até que ele digite x e enter para ter
 
 Implemente a função POP e PUSH de pilha e resolva o problema com elas. No vídeo demonstre pelo menos4 casos
 de sim e 4 casos de não.
+
+Casos certos:
+(A+(B+C))x
+A+(A-D)+(A+B)x
+((A-B)+C)+Ax
+A+B+C-Dx
+
+Casos errados:
+A+(B+C)(x
+((A+B-(C))x
+()A-B)+C)+Ax
+)A+B+C)x
 */
 
 #include <stdio.h>
@@ -34,19 +46,24 @@ char POP(Sentinel* s){
 
     if(EMPTY(s) == 1)
         return 'x';
-    ch = s->exp[s->top-1];
-    s->exp = realloc(s->exp, sizeof(char)*(s->top-1));
+    ch = *(s->exp + s->top-1);
+    s->exp = (char*)realloc(s->exp, sizeof(char)*(s->top-1));
+    s->top = s->top - 1;
     return ch;
 }
 
-void PUSH(Sentinel* s){
+char* PUSH(Sentinel* s){
+    char c;
+
     s->exp = realloc(s->exp, sizeof(char)*(s->top+1));
     if(s->exp == NULL){
         printf("Erro de memoria!\n");
         exit(1);
     }
-    s->top++;
-    s->exp[s->top-1] = getchar();
+    s->top = s->top + 1;
+    c = getchar();
+    *(s->exp + s->top-1) = c;
+    return s->exp;
 }
 
 void RESET(Sentinel* s){
@@ -60,47 +77,41 @@ void CLEAR(Sentinel* s){
     RESET(s);
 }
 
-char TOP(Sentinel* s){
-    return s->exp[s->top];
+int TOP(Sentinel* s){
+    char d = *(s->exp + s->top-1);
+    return d;
 }
 
 int findPair(Sentinel* s){
+    int flag = 0;
     char ch;
+    
     while(EMPTY(s) == 0){
         ch = POP(s);
         if(ch == ')')
-            findPair(s);
+           flag = findPair(s);
         if(ch == '(')
-            return 0;
+            return flag;
     }
-    return 1;
-}
-
-int findPair(Sentinel* s){
-    char ch;
-    while(EMPTY(s) == 0){
-        ch = POP(s);
-        if(ch == ')')
-            findPair(s);
-        if(ch == '(')
-            return 0;
-    }
-    return 1;
+    flag = 1;
+    return flag;
 }
 
 int test(Sentinel* s){
     int flag = 0;
     char ch;
-
+    printf("\n");
     while(EMPTY(s) == 0){
         ch = POP(s);
+        if(ch == '(' || flag == 1)
+            return 1;
         if(ch == ')'){
            flag = findPair(s);
         }    
     }
     if(flag == 0)
-        return 1;
-    return 0;
+        return 0;
+    return 1;
 }
 
 int main(){
@@ -111,15 +122,16 @@ int main(){
     s = (Sentinel *)malloc(sizeof(Sentinel));
     RESET(s);
     
-    printf("Digite a expressão: \n");
+    printf("Digite a expressao: \n");
+    s->exp = PUSH(s);
     while(TOP(s) != 'x'){
-        PUSH(s);
+        s->exp = PUSH(s);
     }
     res = test(s);
     if(res == 0)
-        printf("Expressão escrita corretamente!\n");
+        printf("Expressao escrita corretamente!\n");
     if(res == 1)
-        printf("Expressão errada!\n");
+        printf("Expressao errada!\n");
 
     CLEAR(s);
     free(s);
